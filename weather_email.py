@@ -1,11 +1,11 @@
-import os
+import os #
 import requests
 import resend
 
 # ====== 1. 配置区（这里填你的信息）======
-RESEND_API_KEY = "re_UnjxgDHb_4cz3fJRmvaF2H3xmiqdT7Xha"          # ← 替换成你的 Resend API Key
-FROM_EMAIL = "weather@fimons.dpdns.org"           # ← 替换成你的发件邮箱（必须已验证）
-TO_EMAIL = "153381682@qq.com"              # ← 替换成你的 QQ 邮箱
+RESEND_API_KEY = os.environ["RESEND_API_KEY"]
+FROM_EMAIL = os.environ["FROM_EMAIL"]
+TO_EMAIL = os.environ["TO_EMAIL"]
 
 # 设置你所在城市的经纬度（示例：北京）
 LAT = 31.23
