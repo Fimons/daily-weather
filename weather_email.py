@@ -8,7 +8,7 @@ RESEND_API_KEY = os.environ["RESEND_API_KEY"]
 FROM_EMAIL = os.environ["FROM_EMAIL"]
 TO_EMAIL = os.environ["TO_EMAIL"]
 
-# 城市配置：上海 + 咸宁
+# 城市信息：上海 + 咸宁
 CITIES = [
     {"name": "上海", "lat": 31.23, "lon": 121.47},
     {"name": "咸宁", "lat": 29.85, "lon": 114.32}
@@ -30,7 +30,7 @@ QUOTES = [
     "你努力的样子，比今天的太阳还耀眼。",
     "慢慢来，比较快。今天也是进步的一天。",
     "生活不会辜负每一个认真对待它的人。",
-    "微小的坚持，终将成就不凡的你。",
+    "微小的坚持，终将成就不凡的你.",
 
     # === 爱情 / 陪伴 / 温柔 ===
     "有人等你回家，是冬天最暖的事。",
@@ -69,49 +69,7 @@ def get_weather_desc(code):
     }
     return weather_map.get(code, "未知")
 
-# 获取单个城市天气数据
-def fetch_weather(lat, lon, city_name):
-    print(f"正在获取 {city_name} 天气数据...")
-    url = (
-        f"https://api.open-meteo.com/v1/forecast"
-        f"?latitude={lat}&longitude={lon}"
-        f"&daily=weathercode,temperature_2m_max,temperature_2m_min,"
-        f"apparent_temperature_max,apparent_temperature_min"
-        f"&timezone=Asia/Shanghai"
-    )
-    resp = requests.get(url).json()
-    
-    today = resp['daily']['time'][0]
-    max_temp = resp['daily']['temperature_2m_max'][0]
-    min_temp = resp['daily']['temperature_2m_min'][0]
-    max_feels = resp['daily']['apparent_temperature_max'][0]
-    min_feels = resp['daily']['apparent_temperature_min'][0]
-    weather_code = resp['daily']['weathercode'][0]
-    weather_desc = get_weather_desc(weather_code)
-    
-    avg_feels = (min_feels + max_feels) / 2
-    
-    return {
-        "name": city_name,
-        "date": today,
-        "weather": weather_desc,
-        "min_temp": min_temp,
-        "max_temp": max_temp,
-        "min_feels": min_feels,
-        "max_feels": max_feels,
-        "avg_feels": avg_feels
-    }
-
-# ====== 3. 获取两地天气 ======
-weathers = []
-for city in CITIES:
-    w = fetch_weather(city["lat"], city["lon"], city["name"])
-    weathers.append(w)
-
-# 使用第一个城市的日期作为标题（两地同一天）
-today = weathers[0]["date"]
-
-# ====== 4. 智能穿衣建议函数 ======
+# 智能穿衣建议（基于平均体感温度）
 def get_clothing_advice(avg_temp):
     if avg_temp < 0:
         return "极寒！厚羽绒服+围巾+手套+保暖裤，避免长时间外出。"
@@ -130,26 +88,72 @@ def get_clothing_advice(avg_temp):
     else:
         return "高温！轻薄透气衣物，记得补水防中暑"
 
-# ====== 5. 随机选择一句名言 ======
+# ====== 3. 获取两地天气数据 ======
+weather_data_list = []
+for city in CITIES:
+    print(f"正在获取 {city['name']} 天气数据...")
+    url = (
+        f"https://api.open-meteo.com/v1/forecast"
+        f"?latitude={city['lat']}&longitude={city['lon']}"
+        f"&daily=weathercode,temperature_2m_max,temperature_2m_min,"
+        f"apparent_temperature_max,apparent_temperature_min"
+        f"&timezone=Asia/Shanghai"
+    )
+    resp = requests.get(url).json()
+    
+    today = resp['daily']['time'][0]
+    max_temp = resp['daily']['temperature_2m_max'][0]
+    min_temp = resp['daily']['temperature_2m_min'][0]
+    max_feels = resp['daily']['apparent_temperature_max'][0]
+    min_feels = resp['daily']['apparent_temperature_min'][0]
+    weather_code = resp['daily']['weathercode'][0]
+    weather_desc = get_weather_desc(weather_code)
+    avg_feels = (min_feels + max_feels) / 2
+    clothing_advice = get_clothing_advice(avg_feels)
+    
+    weather_data_list.append({
+        "name": city["name"],
+        "today": today,
+        "weather": weather_desc,
+        "min_temp": min_temp,
+        "max_temp": max_temp,
+        "min_feels": min_feels,
+        "max_feels": max_feels,
+        "clothing_advice": clothing_advice
+    })
+    print(f"{city['name']} 今日天气: {weather_desc}, {min_temp}°C ~ {max_temp}°C (体感: {min_feels:.1f}°C ~ {max_feels:.1f}°C)")
+
+# 使用第一个城市的日期
+today = weather_data_list[0]["today"]
+
+# ====== 4. 随机选择一句名言 + 固定结尾 ======
 random_quote = random.choice(QUOTES)
 fixed_end = "宝宝爱你~"
 
-# ====== 6. 构建 HTML 城市区块（复用原样式）======
-city_blocks = ""
-for w in weathers:
-    clothing = get_clothing_advice(w["avg_feels"])
-    city_blocks += f"""
-            <p><strong>天气：</strong>{w['weather']}</p>
-            <p><strong>气温：</strong>{w['min_temp']}°C ~ {w['max_temp']}°C</p>
-            <p><strong>体感温度：</strong>{w['min_feels']:.1f}°C ~ {w['max_feels']:.1f}°C</p>
+# ====== 5. 构建 HTML 内容（完全复用你的原始样式）======
+shanghai_html = f"""
+            <p><strong>天气：</strong>{weather_data_list[0]['weather']}</p>
+            <p><strong>气温：</strong>{weather_data_list[0]['min_temp']}°C ~ {weather_data_list[0]['max_temp']}°C</p>
+            <p><strong>体感温度：</strong>{weather_data_list[0]['min_feels']:.1f}°C ~ {weather_data_list[0]['max_feels']:.1f}°C</p>
 
             <div style="background: #e8f0fe; padding: 12px; border-radius: 8px; margin: 16px 0;">
                 <h3 style="margin-top: 0; color: #1a73e8;">👕 穿衣建议</h3>
-                <p>{clothing}</p>
+                <p>{weather_data_list[0]['clothing_advice']}</p>
             </div>
-    """
+"""
 
-# ====== 7. 发送邮件 ======
+xianning_html = f"""
+            <p><strong>天气：</strong>{weather_data_list[1]['weather']}</p>
+            <p><strong>气温：</strong>{weather_data_list[1]['min_temp']}°C ~ {weather_data_list[1]['max_temp']}°C</p>
+            <p><strong>体感温度：</strong>{weather_data_list[1]['min_feels']:.1f}°C ~ {weather_data_list[1]['max_feels']:.1f}°C</p>
+
+            <div style="background: #e8f0fe; padding: 12px; border-radius: 8px; margin: 16px 0;">
+                <h3 style="margin-top: 0; color: #1a73e8;">👕 穿衣建议</h3>
+                <p>{weather_data_list[1]['clothing_advice']}</p>
+            </div>
+"""
+
+# ====== 6. 发送邮件 ======
 print("正在发送邮件...")
 resend.api_key = RESEND_API_KEY
 
@@ -164,13 +168,11 @@ try:
                     background: #f9f9ff; color: #333; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
             <h2 style="color: #1a73e8; margin-top: 0;">🌤️ {today} 天气预报</h2>
             
-            <!-- 上海 -->
             <h3 style="color: #1a73e8; margin-bottom: 8px;">📍 上海</h3>
-            {city_blocks.split('<h3')[0]}  <!-- 提取上海部分 -->
+            {shanghai_html}
 
-            <!-- 咸宁 -->
             <h3 style="color: #1a73e8; margin-top: 24px; margin-bottom: 8px;">📍 咸宁</h3>
-            {'<h3'.join(city_blocks.split('<h3')[1:])}  <!-- 提取咸宁部分 -->
+            {xianning_html}
 
             <blockquote style="border-left: 4px solid #4CAF50; padding-left: 16px; 
                               margin: 20px 0; color: #555; font-style: italic; font-size: 1.05em; line-height: 1.5;">
