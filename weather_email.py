@@ -139,13 +139,15 @@ weather_blocks = ""
 for w in weathers:
     clothing = get_clothing_advice(w["avg_feels"])
     weather_blocks += f"""
-    <div style="background: #f0f8ff; padding: 16px; border-radius: 10px; margin-bottom: 20px; border-left: 4px solid #1a73e8;">
-        <h3 style="margin-top: 0; color: #1a73e8;">📍 {w['name']}</h3>
+    <div style="background: #ffffff; padding: 18px; border-radius: 12px; 
+                margin-bottom: 22px; border: 1px solid #edf2ff; box-shadow: 0 1px 6px rgba(0,0,0,0.03);">
+        <h3 style="margin-top: 0; color: #1a73e8; font-size: 1.2em;">📍 {w['name']}</h3>
         <p><strong>天气：</strong>{w['weather']}</p>
         <p><strong>气温：</strong>{w['min_temp']}°C ~ {w['max_temp']}°C</p>
         <p><strong>体感温度：</strong>{w['min_feels']:.1f}°C ~ {w['max_feels']:.1f}°C</p>
         
-        <div style="background: #e8f0fe; padding: 10px; border-radius: 6px; margin-top: 10px;">
+        <div style="background: #e6f0ff; padding: 12px; border-radius: 8px; 
+                    margin-top: 12px; border-left: 3px solid #4285f4;">
             <strong>👕 穿衣建议：</strong>{clothing}
         </div>
     </div>
@@ -162,24 +164,28 @@ try:
         "subject": f"🌤️ {today} 天气预报 | 上海 & 咸宁",
         "html": f"""
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
-                    max-width: 650px; margin: 20px auto; padding: 20px; border-radius: 12px; 
-                    background: #ffffff; color: #333; box-shadow: 0 2px 12px rgba(0,0,0,0.08);">
-            <h2 style="color: #1a73e8; text-align: center; margin-top: 0;">🌤️ {today} 天气预报</h2>
+                    max-width: 650px; margin: 20px auto; padding: 24px; border-radius: 14px; 
+                    background: #fafcff; color: #333; box-shadow: 0 3px 16px rgba(0,0,0,0.06);">
+            <h2 style="color: #1a73e8; text-align: center; margin-top: 0; font-size: 1.4em;">
+                🌤️ {today} 天气预报
+            </h2>
             
             {weather_blocks}
 
             <blockquote style="border-left: 4px solid #4CAF50; padding-left: 16px; 
-                              margin: 24px 0; color: #555; font-style: italic; font-size: 1.05em; line-height: 1.5;">
+                              margin: 26px 0; color: #555; font-style: italic; 
+                              font-size: 1.05em; line-height: 1.55;">
                 “{random_quote}”
             </blockquote>
 
-            <p style="text-align: right; font-weight: bold; color: #e91e63; font-size: 1.1em;">
+            <p style="text-align: right; font-weight: bold; color: #e91e63; font-size: 1.12em; margin-top: 8px;">
                 {fixed_end}
             </p>
 
-            <hr style="margin: 24px 0; border: 0; border-top: 1px solid #eee;">
-            <p style="color: #888; font-size: 0.9em; text-align: center;">
-                由 Resend 自动发送 · 数据来源：<a href="https://open-meteo.com/" style="color: #1a73e8; text-decoration: none;">Open-Meteo</a>
+            <hr style="margin: 28px 0; border: 0; border-top: 1px solid #f0f0f8;">
+            <p style="color: #999; font-size: 0.88em; text-align: center; margin-bottom: 0;">
+                由 Resend 自动发送 · 数据来源：<a href="https://open-meteo.com/" 
+                style="color: #1a73e8; text-decoration: none;">Open-Meteo</a>
             </p>
         </div>
         """
