@@ -1,9 +1,9 @@
-name: Daily Weather Email
+name: Daily Weather Forecast
 
 on:
   schedule:
-    - cron: '0 23 * * *'   # UTC 23:00 = 北京 7:00
-  workflow_dispatch:        # 允许手动测试
+    - cron: '45 22 * * *'   # UTC 0:00 = 北京时间 7:00
+  workflow_dispatch:      # 允许手动触发测试
 
 jobs:
   send-weather:
@@ -14,14 +14,15 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: '3.11'
 
       - name: Install dependencies
-        run: pip install requests resend
+        run: |
+          pip install -r requirements.txt
 
       - name: Run weather script
         env:
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           FROM_EMAIL: ${{ secrets.FROM_EMAIL }}
           TO_EMAIL: ${{ secrets.TO_EMAIL }}
-        run: python weather.py
+        run: python weather_email.py
