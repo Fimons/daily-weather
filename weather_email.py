@@ -8,10 +8,11 @@ RESEND_API_KEY = os.environ["RESEND_API_KEY"]
 FROM_EMAIL = os.environ["FROM_EMAIL"]
 TO_EMAIL = os.environ["TO_EMAIL"]
 
-# 城市信息：上海 + 咸宁
+# 城市信息：上海 + 咸宁 + 邵东
 CITIES = [
     {"name": "上海", "lat": 31.23, "lon": 121.47},
-    {"name": "咸宁", "lat": 29.85, "lon": 114.32}
+    {"name": "咸宁", "lat": 29.85, "lon": 114.32},
+    {"name": "邵东", "lat": 27.26, "lon": 111.74}  # 新增邵东
 ]
 
 # ====== 2. 励志 & 爱情名言库（共 28 条）======
@@ -38,7 +39,7 @@ QUOTES = [
     "今天也要记得，有人正偷偷想着你。",
     "爱是：我知道外面很冷，但我的怀抱很暖。",
     "和喜欢的人一起看雪，连寒风都变得温柔。",
-    "真正的浪漫，是每天清晨说‘早安’，夜晚道‘晚安’。",
+    "真正的浪漫，是每天清晨说'早安'，夜晚道'晚安'。",
     "你不需要完美，你只需要做你自己——就值得被爱。",
     "世界很大，但有人只为你留了一盏灯。",
     "爱不是轰轰烈烈，而是陪你吃早餐、看天气、过平凡日子。",
@@ -88,7 +89,7 @@ def get_clothing_advice(avg_temp):
     else:
         return "高温！轻薄透气衣物，记得补水防中暑"
 
-# ====== 3. 获取两地天气数据 ======
+# ====== 3. 获取三地天气数据 ======
 weather_data_list = []
 for city in CITIES:
     print(f"正在获取 {city['name']} 天气数据...")
@@ -121,7 +122,7 @@ for city in CITIES:
         "max_feels": max_feels,
         "clothing_advice": clothing_advice
     })
-    print(f"{city['name']} 今日天气: {weather_desc}, {min_temp}°C ~ {max_temp}°C (体感: {min_feels:.1f}°C ~ {max_feels:.1f}°C)")
+    print(f"{city['name']} 今日天气：{weather_desc}, {min_temp}°C ~ {max_temp}°C (体感：{min_feels:.1f}°C ~ {max_feels:.1f}°C)")
 
 # 使用第一个城市的日期
 today = weather_data_list[0]["today"]
@@ -130,28 +131,28 @@ today = weather_data_list[0]["today"]
 random_quote = random.choice(QUOTES)
 fixed_end = "宝宝爱你~"
 
-# ====== 5. 构建 HTML 内容（完全复用你的原始样式）======
-shanghai_html = f"""
-            <p><strong>天气：</strong>{weather_data_list[0]['weather']}</p>
-            <p><strong>气温：</strong>{weather_data_list[0]['min_temp']}°C ~ {weather_data_list[0]['max_temp']}°C</p>
-            <p><strong>体感温度：</strong>{weather_data_list[0]['min_feels']:.1f}°C ~ {weather_data_list[0]['max_feels']:.1f}°C</p>
+# ====== 5. 构建 HTML 内容（动态生成各城市天气）======
+def build_city_html(city_data):
+    return f"""
+            <p><strong>天气：</strong>{city_data['weather']}</p>
+            <p><strong>气温：</strong>{city_data['min_temp']}°C ~ {city_data['max_temp']}°C</p>
+            <p><strong>体感温度：</strong>{city_data['min_feels']:.1f}°C ~ {city_data['max_feels']:.1f}°C</p>
 
             <div style="background: #e8f0fe; padding: 12px; border-radius: 8px; margin: 16px 0;">
                 <h3 style="margin-top: 0; color: #1a73e8;">👕 穿衣建议</h3>
-                <p>{weather_data_list[0]['clothing_advice']}</p>
+                <p>{city_data['clothing_advice']}</p>
             </div>
-"""
+    """
 
-xianning_html = f"""
-            <p><strong>天气：</strong>{weather_data_list[1]['weather']}</p>
-            <p><strong>气温：</strong>{weather_data_list[1]['min_temp']}°C ~ {weather_data_list[1]['max_temp']}°C</p>
-            <p><strong>体感温度：</strong>{weather_data_list[1]['min_feels']:.1f}°C ~ {weather_data_list[1]['max_feels']:.1f}°C</p>
-
-            <div style="background: #e8f0fe; padding: 12px; border-radius: 8px; margin: 16px 0;">
-                <h3 style="margin-top: 0; color: #1a73e8;">👕 穿衣建议</h3>
-                <p>{weather_data_list[1]['clothing_advice']}</p>
-            </div>
-"""
+# 动态生成所有城市的 HTML
+cities_html = ""
+city_icons = ["📍", "🏙️", "🏠"]  # 可选：不同城市用不同图标
+for i, city_data in enumerate(weather_data_list):
+    icon = city_icons[i] if i < len(city_icons) else "📍"
+    cities_html += f"""
+            <h3 style="color: #1a73e8; margin-top: {24 if i > 0 else 0}px; margin-bottom: 8px;">{icon} {city_data['name']}</h3>
+            {build_city_html(city_data)}
+    """
 
 # ====== 6. 发送邮件 ======
 print("正在发送邮件...")
@@ -161,22 +162,18 @@ try:
     email = resend.Emails.send({
         "from": FROM_EMAIL,
         "to": TO_EMAIL,
-        "subject": f"🌤️ {today} 天气预报 | 上海 & 咸宁",
+        "subject": f"🌤️ {today} 天气预报 | 上海 & 咸宁 & 邵东",
         "html": f"""
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
                     max-width: 600px; margin: 20px auto; padding: 20px; border-radius: 12px; 
                     background: #f9f9ff; color: #333; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
             <h2 style="color: #1a73e8; margin-top: 0;">🌤️ {today} 天气预报</h2>
             
-            <h3 style="color: #1a73e8; margin-bottom: 8px;">📍 上海</h3>
-            {shanghai_html}
-
-            <h3 style="color: #1a73e8; margin-top: 24px; margin-bottom: 8px;">📍 咸宁</h3>
-            {xianning_html}
+            {cities_html}
 
             <blockquote style="border-left: 4px solid #4CAF50; padding-left: 16px; 
                               margin: 20px 0; color: #555; font-style: italic; font-size: 1.05em; line-height: 1.5;">
-                “{random_quote}”
+                "{random_quote}"
             </blockquote>
 
             <p style="text-align: right; font-weight: bold; color: #e91e63; font-size: 1.1em; margin-top: 8px;">
